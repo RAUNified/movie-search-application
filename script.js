@@ -1,57 +1,54 @@
-const apiKey = "2e693b36";
-const apiUrl = `http://www.omdbapi.com/?apikey=${apiKey}`;
+const apiUrl = "http://localhost/movie-search-application/connection.php"; 
 
 document.getElementById("search-button").addEventListener("click", () => {
     const movieInput = document.getElementById("movie-input").value.trim();
     const resultsDiv = document.getElementById("results");
 
-    resultsDiv.innerHTML = ""; 
+    
+    resultsDiv.innerHTML = "";
 
     if (!movieInput) {
         resultsDiv.innerHTML = "<p>Please enter a movie title to search.</p>";
         return;
     }
 
-    fetch(`${apiUrl}&s=${movieInput}`)
-        .then(response => response.json())
+    
+    fetch(`${apiUrl}?q=${encodeURIComponent(movieInput)}`)
+        .then(response => {
+           
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.Response === "False") {
-                resultsDiv.innerHTML = `<p>${data.Error}</p>`;
+           
+            if (data.error) {
+                resultsDiv.innerHTML = `<p>${data.error}</p>`;
                 return;
             }
 
-            const movies = data.Search;
-            resultsDiv.innerHTML = movies
-                .map(movie => `
-                    <div class="movie">
-                        <img src="${movie.Poster !== "N/A" ? movie.Poster : "placeholder.jpg"}" alt="${movie.Title}">
-                        <div class="movie-details">
-                            <div class="movie-title">${movie.Title}</div>
-                            <div class="movie-year">Year: ${movie.Year}</div>
-                            <div class="movie-overview">
-                                <button onclick="fetchMovieDetails('${movie.imdbID}')">View Details</button>
-                            </div>
-                        </div>
+         
+            if (!data.title) {
+                resultsDiv.innerHTML = `<p>No movie found with the title "${movieInput}".</p>`;
+                return;
+            }
+
+          
+            resultsDiv.innerHTML = `
+                <div class="movie">
+                    <img src="${data.poster !== null ? data.poster : "placeholder.jpg"}" alt="${data.title}">
+                    <div class="movie-details">
+                        <div class="movie-title">${data.title}</div>
+                        <div class="movie-year">Year: ${data.year}</div>
+                        <div class="movie-overview">${data.plot}</div>
                     </div>
-                `).join("");
+                </div>
+            `;
         })
         .catch(error => {
+            
             resultsDiv.innerHTML = "<p>Failed to fetch data. Please try again later.</p>";
             console.error("Error fetching movie data:", error);
         });
 });
-
-function fetchMovieDetails(imdbID) {
-    fetch(`${apiUrl}&i=${imdbID}&plot=short`)
-        .then(response => response.json())
-        .then(data => {
-            alert(`
-                Title: ${data.Title}
-                Year: ${data.Year}
-                Plot: ${data.Plot}
-            `);
-        })
-        .catch(error => {
-            console.error("Error fetching movie details:", error);
-        });
-}
