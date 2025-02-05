@@ -36,7 +36,7 @@ $checkRecentData = "SELECT * FROM movies WHERE title LIKE '%$movieName%' AND TIM
 $result = $conn->query($checkRecentData);
 
 if ($result->num_rows == 0) {
-    $apiKey = "2e693b36"; 
+    $apiKey = "your api key here"; 
     $url = "http://www.omdbapi.com/?apikey=$apiKey&t=" . urlencode($movieName);
 
     $response = @file_get_contents($url);
